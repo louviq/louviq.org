@@ -77,7 +77,7 @@ Communes: Engines of the Future, Emergent Communities conference, San Francisco,
 
 **advocacy/ activism/ praxis**
 
-w/ Swarm Foundation: Freedom of Speech Corner | [EthCC V](https://medium.com/ethereum-swarm/monthly-ecosystem-call-28-july-2022-recap-e645c0f1d315) (2022), [EthBerlin](https://twitter.com/ethswarm/status/1570785253509464065) (2022), [Devcon VI](https://twitter.com/ethswarm/status/1580337494582734848) Bogotá (2022) 
+w/ Swarm Foundation: Freedom of Speech Corner \| [EthCC V](https://medium.com/ethereum-swarm/monthly-ecosystem-call-28-july-2022-recap-e645c0f1d315) (2022), [EthBerlin](https://twitter.com/ethswarm/status/1570785253509464065) (2022), [Devcon VI](https://twitter.com/ethswarm/status/1580337494582734848) Bogotá (2022) 
 
 Prison abolition, harm prevention and alternative justice systems for communes and collectives
 
@@ -89,7 +89,7 @@ Animal welfare
 
 w/ LAB GALLERY: the first purpose driven NFT gallery funding high-impact, neglected science
 
-Love_crypto_poetry_therapy | Chaos Computer Club rC3 – Remote Chaos Experience (2019), Feÿ Arts (2022), [Devcon VI](https://www.regensunite.com/bogota): Bogotá (2022) 
+Love_crypto_poetry_therapy \| Chaos Computer Club rC3 – Remote Chaos Experience (2019), Feÿ Arts (2022), [Devcon VI](https://www.regensunite.com/bogota): Bogotá (2022) 
 
 BED TALKS
 
