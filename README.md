@@ -84,7 +84,7 @@ BED TALKS
 
 [Feÿ Arts](https://en.fey-arts.com/) – 2019, 2022, 2024
 
-**Media **
+**Media**
 
 [Foresight Institute : vers un futur désirable](https://www.lesechos.fr/thema/economie-durable/foresight-institute-vers-un-futur-desirable-1254665) – Les Echos
 
