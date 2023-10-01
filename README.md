@@ -4,8 +4,6 @@ At Foresight I build towards technology-enabled better futures, and connect and 
 
 Through Embassy Network and Feÿtopia, I support the growth of an intervowen network of place-based communities experimenting with new forms of governance and solidarity.
 
-Fast memetic onboarding: 
-
 **Ecosystem steward**
 
 [Foresight Institute](https://foresight.org/) – nonprofit accelerating a large group of scientists & technologists where legacy institutions usually fail to do so, and building the path to concrete long-term desirable futures (“[existential hope](https://www.existentialhope.com/)”).
@@ -36,7 +34,7 @@ Since 2017 I’ve been helping there in multiple capacities, from when it was mo
 
 [Zarinah Agnew](https://youtu.be/BdBviVWhar8?si=GJxRrTh7CbIWwGY2) – Experimental Societies
 
-**Co-curator & -organizer**
+**Co-curator & -host**
 
 [Vision Weekend 2023](https://foresight.org/vision-weekends-2023/)
 
@@ -63,6 +61,19 @@ Existential Hope Salons Series 2021, online
 Existential Hope Salons Series 2020, online
 
 Existential Hope Salons Series 2019, San Francisco
+
+**selected talks & workshops**
+
+Intentional Communities as Proto- Network States, Zuzalu, Montenegro, 2023
+Freedom of Speech, Anonymity and Autonomy: dark zones/ free zones, DevCon VI, Bogota, 2022
+Prefigurative Art to make Sci-Fi Real, OxBAT, Oxford, 2022
+Decentralized Science, DeSci Ethics, ETHBarcelona, Barcelona, 2022
+Ethics of Decentralized Science, Paris, 2022
+Decentralized Science, Open Science, and the Future, Oxford Blockchain Conference, Oxford, 2022
+Alternative Justices for Alternative Futures, SASE, New York, 2019
+Existential Risks on Earth 2045, Augmented Intelligence Summit, San Francisco, 2018
+Commune-based Approaches to Rethinking Justice, Imagining Post Capitalism Festival, Oakland, 2018
+Communes: Engines of the Future, Emergent Communities conference, San Francisco, 2018
 
 **advocacy/ activism/ praxis**
 
