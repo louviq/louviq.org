@@ -1,0 +1,1595 @@
+#+title: neurosys
+#+subtitle: A neurotically minimal and reproducible computing environment.
+#+author: Dan Girshovich
+#+email: dan.girsh@gmail.com
+#+startup: align entitiespretty
+#+options: toc:2
+
+* About
+
+My neurosys encompasses configuration for:
+
+- [[https://nixos.org/][NixOS]] ([[#nixos-config][config]])
+- [[https://xmonad.org/][XMonad]] ([[#xmonad][config]])
+- [[https://github.com/hlissner/doom-emacs][Doom Emacs]] ([[#doom-emacs][config]])
+  - Includes a [[https://github.com/dangirsh/.doom.d/tree/master/modules/personal/neurosys][neurosys module]] with utilities (e.g. remote deployment)
+
+These define a my computing environment, which strives to be
+
+- *Effective*: interactions with code/data should occur at the speed of thought.
+- *Extensible*: otherwise, it's not really mine.
+- *Long-lived*: resist entropy/bitrot/bankruptcy until the end of the keyboard + screen era.
+- *Minimal*: less is more for the base configuration - Nix enables project-level dependency management.
+- *Reproducible*: enabled by the content-based hashes of Nix + Git. No fear of hitting un-recoverable states.
+
+[[https://github.com/dangirsh/neurosys/blob/master/README.org][This]] [[https://orgmode.org/worg/org-contrib/babel/intro.html#literate-programming][literate org file]], along with [[https://github.com/dangirsh/.doom.d/blob/master/README.org][another for Doom]], are /the only two source files/. The rest are generated via [[https://orgmode.org/manual/Extracting-Source-Code.html][tangling]].
+
+If you are viewing this in a browser, consider opening the [[https://github.com/dangirsh/neurosys/blob/master/README.org][original org file]] in Emacs for the full experience. *The HTML version is an imperfect rendering*.
+
+The name /neurosys/ is used half-jokingly.
+
+** Inspirations
+
+In no particular order, I found the following configurations especially helpful:
+
+- [[https://github.com/jwiegley/nix-config][jwiegley/nix-config: My local Nix configuration]]
+- [[https://github.com/IvanMalison/dotfiles][IvanMalison/dotfiles: Configuration files for XMonad, Emacs, NixOS, ...]]
+- [[https://github.com/willbush/system][willbush/system: System configuration]]
+- [[https://github.com/malloc47/config][malloc47/config: personal config files, cannibalized from a number o...]]
+- [[https://github.com/hlissner/dotfiles][hlissner/dotfiles: NixOS dotfiles for veteran bike shedders]]
+- [[https://matthewbauer.us/bauer/][bauer: an Emacs+Nix IDE]]
+
+
+** Helpful Resources
+
+- [[https://www.nmattia.com/posts/2018-03-21-nix-reproducible-setup-linux-macos.html][Nicolas Mattia – Nix: A Reproducible Setup for Linux and macOS]]
+- [[https://www.malloc47.com/migrating-to-nixos/][malloc47/Migrating to NixOS]]
+- [[https://christine.website/blog/nixos-desktop-flow-2020-04-25][My NixOS Desktop Flow - Christine Dodrill]]
+- [[https://www.gwern.net/Choosing-Software][Choosing Software · Gwern.net]]
+
+* Table of Contents :QUOTE:TOC_3:
+#+BEGIN_QUOTE
+- [[#about][About]]
+  - [[#inspirations][Inspirations]]
+  - [[#helpful-resources][Helpful Resources]]
+- [[#host-setup][Host setup]]
+  - [[#install-nixos][Install NixOS]]
+  - [[#add-channels][Add channels]]
+    - [[#stable][Stable]]
+    - [[#unstable][Unstable]]
+- [[#deployment][Deployment]]
+  - [[#get-the-neurosys-source][Get the neurosys source]]
+  - [[#sync-to-host][Sync to host]]
+    - [[#rsync-script][Rsync Script]]
+- [[#doom-emacs][Doom Emacs]]
+- [[#xmonad][XMonad]]
+  - [[#haskell-configuration][Haskell Configuration]]
+    - [[#imports][Imports]]
+    - [[#main][Main]]
+    - [[#keybindings][Keybindings]]
+    - [[#asthetics][Asthetics]]
+    - [[#float-certain-apps][Float certain apps]]
+    - [[#screenshot][Screenshot]]
+  - [[#start-script][Start Script]]
+    - [[#desktop-entry-pointing-to-start-script][Desktop Entry Pointing to Start Script]]
+- [[#nixos-config][Nixos Config]]
+  - [[#system-level-config][System-level Config]]
+    - [[#nix][Nix]]
+    - [[#timezone][Timezone]]
+    - [[#boot][Boot]]
+    - [[#networking][Networking]]
+    - [[#services][Services]]
+    - [[#packages][Packages]]
+    - [[#fonts][Fonts]]
+    - [[#user-definition][User Definition]]
+    - [[#ssh][SSH]]
+    - [[#x2go-client][X2Go Client]]
+    - [[#end][End]]
+  - [[#user-level-config][User-level Config]]
+    - [[#environment-variables][Environment Variables]]
+    - [[#packages-1][Packages]]
+    - [[#programs][Programs]]
+    - [[#services-1][Services]]
+    - [[#end-1][End]]
+    - [[#to-test-05][To test]]
+    - [[#to-add-01][To add]]
+  - [[#global-constants][Global Constants]]
+  - [[#hardware-specific-config][Hardware-specific Config]]
+    - [[#disk-mounts][Disk Mounts]]
+  - [[#version-pinning][Version Pinning]]
+- [[#future-work][Future Work]]
+  - [[#floating-emacs-popup-for-quick-commands][Floating Emacs popup for quick commands]]
+  - [[#hidpi-autotoggle][HiDPI autotoggle]]
+    - [[#keybase-tweak][Keybase Tweak]]
+  - [[#consistent-copypaste-bindings][Consistent copy/paste bindings]]
+  - [[#consolidate-xmonad-and-emacs-window-management][Consolidate XMonad and Emacs window management]]
+  - [[#fix-indentation-in-tangled-files][Fix indentation in tangled files]]
+- [[#autoloads][Autoloads]]
+#+END_QUOTE
+
+* Host setup
+
+** Install NixOS
+
+Followed:
+https://www.linode.com/docs/tools-reference/custom-kernels-distros/install-nixos-on-linode/
+
+** Add channels
+
+*** Stable
+
+#+BEGIN_SRC sh
+NIXOS_VERSION=20.03
+
+nix-channel --add "https://nixos.org/channels/nixos-${NIXOS_VERSION}" nixos
+nix-channel --add "https://github.com/rycee/home-manager/archive/release-${NIXOS_VERSION}.tar.gz" home-manager
+nix-channel --add "https://nixos.org/channels/nixpkgs-${NIXOS_VERSION}" nixpkgs
+
+nix-channel update
+#+END_SRC
+
+*** Unstable
+
+#+BEGIN_SRC sh
+
+nix-channel --add https://github.com/rycee/home-manager/archive/master.tar.gz home-manager
+nix-channel --add https://nixos.org/channels/nixos-unstable nixos
+nix-channel --add "https://nixos.org/channels/nixpkgs-unstable" nixpkgs-unstable
+
+nix-channel update
+#+END_SRC
+
+* Deployment
+
+** Get the neurosys source
+
+Don't forget to clone recursively, because of the submodules:
+
+#+begin_src sh
+git clone --recursive git@github.com:dangirsh/neurosys.git
+#+end_src
+
+** Sync to host
+
+Run [[elisp:(neurosys/deploy-to-host)][neurosys/deploy-to-host]], which will tangle this file and =rsync= the results to a specified host.
+
+*** Rsync Script
+:PROPERTIES:
+:ID:       09e08700-edbb-454f-9ce0-09caed2b1cbd
+:END:
+
+#+begin_src sh :tangle rsync.sh :tangle-mode (identity #o775)
+HOST=$1
+HOST_HOME=$2
+
+rsync -Pav --rsync-path="sudo rsync" nixos/ $HOST:/etc/nixos/
+rsync -Pav home/ $HOST:$HOST_HOME
+#+end_src
+
+*** COMMENT Quick deploy links
+
+[[elisp:(neurosys/deploy-to-host "root@nixos-dev" "/home/dan/")][Deploy to nixos-dev]]
+
+* Doom Emacs
+
+[[https://github.com/mindlike/.doom.d][My Doom Emacs Configuration]] is tracked in the [[file:home/][home folder]] as a git submodule.
+
+Until projects like [[https://github.com/vlaci/nix-doom-emacs][nix-doom-emacs]] are stable, I'm *not yet* tracking my Emacs packages / config in Nix. For now, I track known-good commits via submodules / [[https://github.com/raxod502/straight.el][straight.el]], and tie them to external dependencies (all managed by Nix) in this repo. If you know a better way to do this, please [[https://dangirsh.org/contact.html][let me know]].
+
+Emacs itself is tracked via the [[https://github.com/nix-community/emacs-overlay][emacs-overlay]], which is version pinned via [[https://github.com/nmattia/niv][niv]] in [[file:nixos/nix/sources.json][sources.json]]. See the [[*Emacs][nix delaration]].
+
+* XMonad
+
+I use XMonad as a window manager and minimal desktop environment. I don't run any additional desktop environment (e.g. XFCE). Instead, I have the interface to the few things I need configured here in Haskell, or elsewhere ([[*Doom Emacs][Emacs]]).
+
+I've don't use any system trays / status bars / panels, since the Emacs modeline is enough for me. This choice reduces the complexity of the XMonad configuration, and avoids depending on xmobar/polybar.
+
+
+** Haskell Configuration
+:PROPERTIES:
+:header-args: :tangle home/.xmonad/xmonad.hs :comments link
+:END:
+*** Imports
+:PROPERTIES:
+:ID:       f103b573-5fe1-4ebd-ae35-e6f1a73ecdad
+:END:
+
+#+begin_src haskell
+import XMonad
+
+import XMonad.Hooks.SetWMName
+import XMonad.Hooks.DynamicProperty (dynamicTitle)
+import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.ManageHelpers
+import XMonad.Hooks.UrgencyHook
+
+import XMonad.Layout.Grid
+import XMonad.Layout.Fullscreen
+import XMonad.Layout.Minimize
+import XMonad.Actions.Minimize
+import XMonad.Layout.NoBorders
+import XMonad.Layout.NoFrillsDecoration (noFrillsDeco, shrinkText,
+                                         inactiveBorderColor, inactiveColor, inactiveTextColor, activeBorderColor,
+                                         activeColor, activeTextColor, urgentBorderColor, urgentTextColor, decoHeight)
+import XMonad.Layout.Tabbed (simpleTabbed)
+import XMonad.Layout.ResizableTile
+import XMonad.Layout.MultiColumns
+
+import XMonad.Actions.CycleWS (toggleWS)
+import XMonad.Actions.CycleRecentWS (cycleRecentWS)
+import qualified XMonad.StackSet as W
+
+import XMonad.Prompt
+import XMonad.Prompt.AppLauncher as AL
+import XMonad.Util.Run
+
+import Data.Monoid
+import Data.Default (def)
+import Data.Map as M (fromList,union, Map())
+import Data.List (isPrefixOf)
+#+end_src
+
+*** Main
+:PROPERTIES:
+:ID:       099e2205-fc29-41c0-86d4-ce9ac62437c3
+:END:
+
+#+begin_src haskell
+main :: IO ()
+main = xmonad $
+  withUrgencyHook NoUrgencyHook $
+  ewmh $
+  fullscreenSupport def {
+    borderWidth = 1
+  , focusedBorderColor = blue
+  , terminal = "alacritty"
+  , layoutHook = smartBorders $  -- no borders for sole windows
+                 noFrillsDeco shrinkText topBarTheme $   -- visually mark the focused window with a top bar
+                 minimize
+                 (ResizableTall 1 (3/100) (1/2) []
+                   ||| Mirror (ResizableTall 1 (3/100) (1/2) [])
+                   ||| multiCol [1] 1 0.01 (-0.5)
+                   ||| noBorders Full
+                   ||| simpleTabbed
+                   ||| Grid)
+
+  , workspaces = map show $ [1..9] ++ [0 :: Int]
+  , modMask = mod4Mask  -- super key as modifier
+  , keys = \c -> myKeys c `M.union` keys def c
+  , manageHook = myManageHook <+> manageZoomHook
+  , handleEventHook = ewmhDesktopsEventHook <+> myHandleEventHook
+  , startupHook = do
+      -- http://hackage.haskell.org/package/xmonad-contrib-0.16/docs/XMonad-Hooks-SetWMName.html
+      setWMName "LG3D"
+      windows $ W.greedyView "1"
+  }
+#+end_src
+
+*** Keybindings
+
+**** Default
+
+From https://xmonad.org/manpage.html#default-keyboard-bindings
+
+[[file:~/repos/xmonad/man/xmonad.hs::myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $][source]]
+
+| binding           | command                                                                       |
+|-------------------+-------------------------------------------------------------------------------|
+| mod-shift-return  | Launch terminal                                                               |
+| mod-p             | Launch +dmenu+ rofi                                                             |
+| +mod-shift-p+       | +Launch gmrun+                                                                  |
+| mod-shift-c       | Close the focused window                                                      |
+| mod-space         | Rotate through the available layout algorithms                                |
+| mod-shift-space   | Reset the layouts on the current workspace to default                         |
+| +mod-n+             | +Resize viewed windows to the correct size+                                     |
+| mod-tab           | Move focus to the next window                                                 |
+| mod-shift-tab     | Move focus to the previous window                                             |
+| mod-j             | Move focus to the next window                                                 |
+| mod-k             | Move focus to the previous window                                             |
+| +mod-m+             | +Move focus to the master window+                                               |
+| mod-return        | Swap the focused window and the master window                                 |
+| mod-shift-j       | Swap the focused window with the next window                                  |
+| mod-shift-k       | Swap the focused window with the previous window                              |
+| mod-h             | Shrink the master area                                                        |
+| mod-l             | Expand the master area                                                        |
+| mod-t             | Push window back into tiling                                                  |
+| +mod-comma+         | +Increment the number of windows in the master area+                            |
+| +mod-period+        | +Deincrement the number of windows in the master area+                          |
+| mod-shift-q       | Quit xmonad                                                                   |
+| +mod-q+             | +Restart xmonad+                                                                |
+| mod-shift-slash   | Run xmessage with a summary of the default keybindings (useful for beginners) |
+| mod-[1..9]        | Switch to workspace N                                                         |
+| mod-shift-[1..9]  | Move client to workspace N                                                    |
+| mod-{w,e,r}       | Switch to physical/Xinerama screens 1, 2, or 3                                |
+| mod-shift-{w,e,r} | Move client to screen 1, 2, or 3                                              |
+| mod-button1       | Set the window to floating mode and move by dragging                          |
+| mod-button2       | Raise the window to the top of the stack                                      |
+| mod-button3       | Set the window to floating mode and resize by dragging                        |
+
+**** Custom
+:PROPERTIES:
+:ID:       bdb34094-5606-4b90-9659-27f2cc21831a
+:END:
+
+#+begin_src haskell
+myKeys :: XConfig t -> M.Map (KeyMask, KeySym) (X ())
+myKeys XConfig {modMask = m, terminal = term} = M.fromList $ [
+#+end_src
+
+***** Rebooting / Restarting
+:PROPERTIES:
+:ID:       a4300d94-b7ee-46c8-8649-83003a920e9a
+:END:
+
+#+begin_src haskell
+    ((m .|. shiftMask .|. mod1Mask, xK_r), spawn "reboot")
+  , ((m .|. shiftMask .|. mod1Mask, xK_i), spawn "xmonad --recompile && xmonad --restart")
+#+end_src
+
+***** Add Workspace 0
+:PROPERTIES:
+:ID:       0e983f1b-4867-4ae1-bdd7-0eb1fd599656
+:END:
+
+#+begin_src haskell
+  , ((m, xK_0), windows $ W.greedyView "0")
+  , ((m .|. shiftMask, xK_0), windows $ W.shift "0")
+#+end_src
+
+***** Launcher / Window Switcher
+:PROPERTIES:
+:ID:       4a65a200-4d49-4b70-8261-c420289f1d68
+:END:
+
+I currently use [[https://github.com/davatorium/rofi][rofi]] to run programs or switch between open windows. It's simple, fast, and supports fuzzy search.
+
+#+begin_src haskell
+  , ((m, xK_p), spawn "rofi -show drun -modi drun -show-icons -matching fuzzy")
+  , ((m .|. shiftMask, xK_p), spawn "GDK_SCALE=2 rofi -show drun -modi drun -show-icons -matching fuzzy")
+  , ((m, xK_b), spawn "rofi -show window -show-icons -matching fuzzy")
+  -- Like M-y for helm-show-kill-ring in Emacs
+  , ((m, xK_y), spawn "rofi -modi \"clipboard:greenclip print\" -show clipboard -run-command '{cmd}'")
+  -- Text espander
+
+  , ((m .|. shiftMask .|. mod1Mask, xK_j), spawn "texpander.sh")
+  , ((m .|. shiftMask .|. mod1Mask, xK_p), spawn "rofipass")
+#+end_src
+
+
+***** Running Emacs
+:PROPERTIES:
+:ID:       03709ef1-9ca7-4593-a5a1-973ed3354cb2
+:END:
+
+#+begin_src haskell
+  , ((m, xK_n), spawn "emacsclient -c")
+  , ((m .|. shiftMask .|. mod1Mask, xK_n), spawn "EMACS_NON_WORK_MODE=1 ~/scripts/run_emacs.sh")
+  , ((m .|. shiftMask, xK_n), spawn "~/scripts/run_emacs.sh")
+#+end_src
+
+***** Lock Screen
+:PROPERTIES:
+:ID:       1e954aa0-dc30-40a2-88a4-dd94bd92ba32
+:END:
+
+#+begin_src haskell
+  , ((m .|. shiftMask .|. mod1Mask, xK_o), spawn "xtrlock -b")
+#+end_src
+
+***** Horizontal Resizing
+:PROPERTIES:
+:ID:       634eac8e-780e-459c-9048-2b4a86a03d58
+:END:
+
+An obvious missing default...
+
+#+begin_src haskell
+  , ((m .|. shiftMask, xK_h), sendMessage MirrorShrink)
+  , ((m .|. shiftMask, xK_l), sendMessage MirrorExpand)
+#+end_src
+
+***** Window Minimization / Restoration
+:PROPERTIES:
+:ID:       52db6918-73ac-4ea0-97fa-e2d687579ecf
+:END:
+
+#+begin_src haskell
+  , ((m, xK_m), withFocused minimizeWindow)
+  , ((m .|. shiftMask, xK_m), withLastMinimized maximizeWindowAndFocus)
+#+end_src
+
+***** Fullscreen
+:PROPERTIES:
+:ID:       24dace8c-4205-4956-b4c5-5223bd999826
+:END:
+
+#+begin_src haskell
+  , ((m .|. shiftMask, xK_f), withFocused $ \f -> windows =<< appEndo `fmap` runQuery doFullFloat f)
+#+end_src
+
+***** Workspace Swapping
+:PROPERTIES:
+:ID:       c3bb35a1-49b5-481d-b6a3-42d0fdae5114
+:END:
+
+Using ~mod+comma~ quickly swap between workspaces is /very handy/.
+
+#+begin_src haskell
+  , ((m, xK_comma), toggleWS)
+#+end_src
+
+***** Changing number of master windows
+:PROPERTIES:
+:ID:       076000a3-93de-41f3-8768-616f43e6d6bc
+:END:
+
+Some layouts, like ~ResizableTall~, have a "master" area, with 1 window initially assigned there. These commands enable incrementing or decrementing that number.
+
+They are bound by default to ~mod+~, and ~mod+.~, but ~mod+,~ is much more useful for [[*Workspace Swapping][Workspace Swapping]]. Here I add ~Shift~ to the defaults.
+
+#+begin_src haskell
+  , ((m .|. shiftMask, xK_comma), sendMessage (IncMasterN 1))
+  , ((m .|. shiftMask, xK_period), sendMessage (IncMasterN (-1)))
+#+end_src
+
+***** Easier Kill Binding
+:PROPERTIES:
+:ID:       f67e9d5b-2ff4-4200-8fde-dd3a0871ea05
+:END:
+
+- I find the default =mod+shift+c= binding to be clumbsy for killing windows.
+- =mod+q= is easier / more natural.
+- The default =mod+q= for killing XMonad is something I've never needed.
+
+#+begin_src haskell
+  , ((m, xK_q), kill)
+#+end_src
+
+***** Volume Control
+:PROPERTIES:
+:ID:       49308b27-b641-4e31-b811-b4bad6e740dd
+:END:
+
+I don't run a desktop environment, so the volume buttons on my keyboard don't do anything by default.
+
+
+#+begin_src haskell
+  , ((m .|. shiftMask, xK_Up), spawn "amixer -c 1 -q set Master 2dB+ unmute")
+  , ((m .|. shiftMask, xK_Down),spawn "amixer -c 1 -q set Master 2dB- unmute")
+#+end_src
+
+***** Screenshots
+:PROPERTIES:
+:ID:       be6141e6-18de-4dff-9445-51c2635f5c93
+:END:
+
+#+begin_src haskell
+    ,((0, xK_Print), myScreenshot)
+#+end_src
+
+#+begin_src haskell
+    ,((m, xK_Print), myScreenshotClipboard)
+#+end_src
+
+
+***** Keyboard
+:PROPERTIES:
+:ID:       af2e9701-ee14-4de2-b9e7-4944c53e1017
+:END:
+
+#+begin_src haskell
+  , ((m .|. shiftMask, xK_i), spawn "setxkbmap -option 'ctrl:nocaps' && xset r rate 160 80")
+#+end_src
+
+
+***** Arandr
+:PROPERTIES:
+:ID:       9e55a839-1bcc-4442-a6b8-98b33f6d39c3
+:END:
+
+I have =main.sh= and =laptop.sh= symlinked to whatever the current xrandr scripts are for my desk / laptop.
+
+#+begin_src haskell
+  , ((m, xK_s), spawn "/home/dan/.screenlayout/main.sh && feh --bg-fill --no-xinerama --randomize ~/Media/images/wallpaper/* &" )
+  , ((m .|. shiftMask, xK_s), spawn "/home/dan/.screenlayout/laptop.sh && feh --bg-fill --no-xinerama --randomize ~/Media/images/wallpaper/*" )
+  , ((m .|. shiftMask .|. mod1Mask, xK_s), spawn "/home/dan/.screenlayout/bsecondary.sh && feh --bg-fill --no-xinerama --randomize ~/Media/images/wallpaper/*" )
+#+end_src
+
+***** Cycle Recent Workspace
+
+#+begin_src haskell
+  , ((m .|. shiftMask, xK_Tab), cycleRecentWS [xK_Super_L] xK_Tab xK_BackSpace)
+#+end_src
+
+
+***** Multiple Monitors
+:PROPERTIES:
+:ID:       f8ac74cc-5ca6-424f-bb20-f4fe05750b65
+:END:
+
+The functionality here is a primary reason for choosing XMonad: a natural, keyboard-driven way for coordinating workspaces across multiple monitors. I'm genuinely curious to know if others have found something on-par/better elsewhere. Please [[https://dangirsh.org/contact.html][contact me]] if you do.
+
+- Bind =mod-{w, e, r}= to switch focus between monitors.
+- Bind =mod-shift-{w, e, r}= to move workspaces between monitors.
+
+#+begin_src haskell
+  ] ++
+  [((m .|. nilOrShift, key), screenWorkspace sc
+          >>= flip whenJust (windows . f))
+       | (key, sc) <- zip [xK_e, xK_w, xK_r] [0..]
+       , (f, nilOrShift) <- [(W.view, 0), (W.shift, shiftMask)]]
+#+end_src
+
+****** TODO Try XMonad.Actions.PhysicalScreens to order =mod-{w, e, r}= based on physical screen layout
+
+*** Asthetics
+:PROPERTIES:
+:ID:       b7cecd28-8036-4451-8700-e19d5e5335cc
+:END:
+
+#+begin_src haskell
+red     = "#dc322f"
+blue    = "#268bd2"
+yellow  = "#b58900"
+inactive  = "#002b36"
+active      = blue
+
+topBarTheme = def
+    { inactiveBorderColor   = inactive
+    , inactiveColor         = inactive
+    , inactiveTextColor     = inactive
+    , activeBorderColor     = active
+    , activeColor           = active
+    , activeTextColor       = active
+    , urgentBorderColor     = red
+    , urgentTextColor       = yellow
+    , decoHeight            = 10
+    }
+
+
+myShellPrompt = def
+       { font              = "xft:Hack:pixelsize=30"
+       , promptBorderWidth = 1
+       , position          = Top
+       , height            = 42
+       , defaultText       = []
+       }
+#+end_src
+
+*** Float certain apps
+:PROPERTIES:
+:ID:       92898604-cb43-4368-938f-a390ab65bbc3
+:END:
+
+#+begin_src haskell
+manageZoomHook =
+  composeAll $
+    [ (className =? zoomClassName) <&&> shouldFloat <$> title --> doFloat,
+      (className =? zoomClassName) <&&> shouldSink <$> title --> doSink
+    ]
+  where
+    zoomClassName = "zoom"
+    tileTitles =
+      [ "Zoom - Free Account", -- main window
+        "Zoom - Licensed Account", -- main window
+        "Zoom", -- meeting window on creation
+        "Zoom Meeting" -- meeting window shortly after creation
+      ]
+    shouldFloat title = title `notElem` tileTitles
+    shouldSink title = title `elem` tileTitles
+    doSink = (ask >>= doF . W.sink) <+> doF W.swapDown
+
+myHandleEventHook =
+  mconcat
+    [ dynamicTitle manageZoomHook,
+      handleEventHook defaultConfig
+    ]
+
+
+myManageHook = composeAll [ appName =? "Open Files" --> doFloat,
+                            className =? "Zenity" --> doFloat]
+#+end_src
+
+*** Screenshot
+:PROPERTIES:
+:ID:       0d76798f-6aa5-4d7d-89f7-455289a146b2
+:END:
+
+#+begin_src haskell
+myScreenshot = do
+  -- init takes care of the trailing newline character returned by date
+  date <- init <$> runProcessWithInput "date" ["+%Y-%m-%d-%H:%M:%S"] []
+  _ <- spawn "maim -s /tmp/last.png"
+  return ()
+#+end_src
+
+#+begin_src haskell
+myScreenshotClipboard :: X ()
+myScreenshotClipboard = spawn  "maim -s | xclip -selection clipboard -t image/png"
+#+end_src
+
+** Start Script
+:PROPERTIES:
+:ID:       2d6a5556-05d8-4d89-b88f-678a69647de9
+:END:
+
+This is currently only used by when on non-NixOS systems (e.g. Ubuntu).
+
+#+begin_src sh :tangle home/.xmonad/start-xmonad :tangle-mode (identity #o775)
+#!/bin/bash
+
+# Identify the home of our gtkrc file, important for setting styles of
+# gtk-based applications
+export GTK2_RC_FILES="$HOME/.gtkrc-2.0"
+
+# enable for hidpi displays
+# export GDK_SCALE=1
+
+setxkbmap -option 'ctrl:nocaps'
+
+# set keyboard rate
+xset r rate 160 80
+
+sudo timedatectl set-timezone Europe/Berlin
+# sudo timedatectl set-timezone America/New_York
+#_sudo timedatectl set-timezone America/Los_Angeles
+
+# Config in ~/.config/redshift/redshift.conf
+redshift &
+
+# Ensure Zoom output volume stays constant
+# /home/dan/scripts/fuck_zoom.sh 100 &
+
+# Clipboard manager (used with rofi)
+greenclip daemon &
+
+# set trackball rate
+# xinput --set-prop "Primax Kensington Eagle Trackball" "Device Accel Constant Deceleration" 3 || true
+
+# eye breaks
+# safeeyes &
+
+# Wallpaper
+feh --bg-fill --no-xinerama --randomize ~/Media/images/wallpaper/*
+# mxsetroot -solid black
+
+#picom -b
+
+# Start the SSH agent
+eval `ssh-agent -s`
+ssh-add
+
+# enable desktop notifications
+systemctl --user start xfce4-notifyd.service
+
+# Now, finally, start xmonad
+exec xmonad
+#+end_src
+
+*** Desktop Entry Pointing to Start Script
+:PROPERTIES:
+:ID:       679f4869-7950-466a-b0d1-8f0cbbd172e1
+:END:
+
+[[file:/usr/share/xsessions/xmonad.desktop]]
+
+#+begin_src conf
+[Desktop Entry]
+Name=XMonad
+Comment=Lightweight tiling window manager
+Exec=/home/dan/.xmonad/start-xmonad
+Icon=xmonad.png
+Type=XSession
+#+end_src
+
+* Nixos Config
+** System-level Config
+:PROPERTIES:
+:header-args: :tangle nixos/configuration.nix :comments link
+:ID:       d206e175-97f3-485c-a580-c3b502578ffc
+:END:
+
+#+BEGIN_SRC nix
+{ config, pkgs, ... }:
+let
+  sources = import ./nix/sources.nix;
+  # ghcide-nix = import sources."ghcide-nix" { };
+in {
+  imports =
+    [ ./hardware-configuration.nix
+      ./settings.nix
+      "${builtins.fetchTarball https://github.com/rycee/home-manager/archive/release-20.03.tar.gz}/nixos"
+    ];
+
+  system.stateVersion = "20.03";
+
+  nixpkgs.config = {
+    # Allow unfree, which is required for some drivers.
+    allowUnfree = true;
+  };
+  #+END_SRC
+
+*** Nix
+:PROPERTIES:
+:ID:       ac54d86b-9aad-4d35-af3e-663a45da9c88
+:END:
+
+#+BEGIN_SRC nix
+nix = {
+  useSandbox = true;
+  autoOptimiseStore = true;
+  maxJobs = 3; # should be 1 per CPU logical core
+  binaryCaches = [
+    "https://cache.nixos.org/"
+    "https://ghcide-nix.cachix.org"
+    "https://hercules-ci.cachix.org"
+    "https://iohk.cachix.org"
+    "https://nix-tools.cachix.org"
+  ];
+  binaryCachePublicKeys = [
+    "ghcide-nix.cachix.org-1:ibAY5FD+XWLzbLr8fxK6n8fL9zZe7jS+gYeyxyWYK5c="
+    "hercules-ci.cachix.org-1:ZZeDl9Va+xe9j+KqdzoBZMFJHVQ42Uu/c/1/KMC5Lw0="
+    "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
+    "nix-tools.cachix.org-1:ebBEBZLogLxcCvipq2MTvuHlP7ZRdkazFSQsbs0Px1A="
+  ];
+  gc = {
+    automatic = true;
+    dates = "23:00";
+    options = "--delete-older-than 30d";
+  };
+};
+#+END_SRC
+
+*** Timezone
+:PROPERTIES:
+:ID:       2753468b-59cf-4cb5-bd79-02b25d9ec2fd
+:END:
+
+#+BEGIN_SRC nix
+time.timeZone = "America/Los_Angeles";
+#+END_SRC
+
+*** Boot
+:PROPERTIES:
+:ID:       7e999695-84f9-4ce5-8b6e-c7465686a100
+:END:
+
+#+BEGIN_SRC nix
+boot = {
+  cleanTmpDir = true;
+
+  loader = {
+    timeout = 1; # Timeout (in seconds) until loader boots the default menu item.
+    grub = {
+      enable = true;
+      version = 2;
+      device = "nodev";
+      copyKernels = true;
+      fsIdentifier = "provided";
+      extraConfig = "serial; terminal_input serial; terminal_output serial";
+    };
+    systemd-boot.enable = false;
+    efi.canTouchEfiVariables = false;
+
+  };
+};
+#+END_SRC
+
+*** Networking
+:PROPERTIES:
+:ID:       a56040d6-f62f-48d6-be30-93604accde6b
+:END:
+
+#+BEGIN_SRC nix
+
+networking.useDHCP = false;
+networking.usePredictableInterfaceNames = false;
+networking.interfaces.eth0.useDHCP = true;
+networking.firewall.enable = false;
+networking.firewall.allowPing = true;
+# networking.networkmanager.enable = true;
+networking.hostName = "nixos-dev";
+
+networking.interfaces.eth0.tempAddress = "disabled";
+#+END_SRC
+
+*** Services
+:PROPERTIES:
+:ID:       73de180a-03a8-49b3-a052-3c98bb5c2bd2
+:END:
+
+#+BEGIN_SRC nix
+
+services = {
+
+  xserver = {
+    enable = true;
+    layout = "us";
+
+    windowManager.xmonad = {
+      enable = true;
+      enableContribAndExtras = true;
+      extraPackages = haskellPackges: [
+        haskellPackges.xmonad-contrib
+        haskellPackges.xmonad-extras
+        haskellPackges.xmonad
+      ];
+    };
+
+    displayManager = {
+      defaultSession = "none+xmonad";
+      lightdm.enable = true;
+    };
+    desktopManager.xterm.enable = false;
+  };
+#+END_SRC
+
+**** Syncthing
+:PROPERTIES:
+:ID:       b7028333-4e79-4020-a79d-8becefb7f430
+:END:
+#+BEGIN_SRC nix
+
+  # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/networking/syncthing.nix
+  syncthing = {
+    enable = true;
+    openDefaultPorts = true;
+    user = "${config.settings.username}";
+    configDir = "/home/${config.settings.username}/.config/syncthing";
+    dataDir = "/home/${config.settings.username}/.local/share/syncthing";
+    declarative = {
+      devices = {
+        nixos-dev.id = "EEMRJQE-TBONTUL-UBGJ6FT-AAUS25K-COP3VHE-WERN7IN-PTNZ63Z-GZZX2AY";
+        x1carbon9.id = "EIZV5LR-F3JILKF-7MD5UMZ-KYRW37L-RVJ2WI4-7LQD7VC-U5BSEBD-YMGQPQ3";
+        pixel6-pro.id = "DISECZT-3ILXZ2S-B7BTYBI-R6KKLH2-YYIDZGD-4LP2OEF-NAURN57-ZPR6XAD";
+      };
+      folders = {
+        sync = rec {
+          id = "at23u-zmxto";
+          devices = [ "nixos-dev" "x1carbon9" "pixel6-pro"];
+          path = "/bkp/Sync";
+          watch = false;
+          rescanInterval = 3600 * 1;
+          type = "receiveonly"; # sendreceive
+          enable = true;
+          versioning.type = "simple";
+          versioning.params.keep = "5";
+        };
+        media = rec {
+          id = "media";
+          devices = [ "nixos-dev"  "x1carbon9" "pixel6-pro"];
+          path = "/bkp/Media";
+          watch = false;
+          rescanInterval = 3600 * 6;
+          type = "receiveonly"; # sendreceive
+          enable = true;
+          versioning.type = "simple";
+          versioning.params.keep = "5";
+        };
+        work = rec {
+          id = "d7svv-zjsz2";
+          devices = [ "nixos-dev" "x1carbon9" "pixel6-pro"];
+          path = "/bkp/Work";
+          watch = false;
+          rescanInterval = 3600 * 6;
+          type = "receiveonly"; # sendreceive
+          enable = true;
+          versioning.type = "simple";
+          versioning.params.keep = "5";
+        };
+      };
+    };
+  };
+#+END_SRC
+
+**** Tarsnap
+:PROPERTIES:
+:ID:       58f00c2f-1aa2-4d67-88a1-8674b5a676fe
+:END:
+
+[[https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/backup/tarsnap.nix][nixpkgs/tarsnap.nix at master · NixOS/nixpkgs · GitHub]]
+
+#+begin_src nix
+tarsnap.enable = true;
+tarsnap.keyfile = "/bkp/Sync/keys/nixos-dev-tarsnap.key";
+tarsnap.archives = {
+  main = {
+    keyfile = "/bkp/Sync/keys/nixos-dev-tarsnap.key";
+    directories = ["/bkp/Sync" "/bkp/Work" "/bkp/Media"];
+  };
+};
+#+end_src
+
+**** End
+:PROPERTIES:
+:ID:       cf0131f7-bad4-4a4d-a622-71fefc111d82
+:END:
+
+#+BEGIN_SRC nix
+};
+# virtualisation.docker.enable = true;
+#+END_SRC
+
+*** Packages
+:PROPERTIES:
+:ID:       367b0c5b-a853-49f2-839f-e26f554a1f5c
+:END:
+
+#+BEGIN_SRC nix
+environment.systemPackages = with pkgs; [
+  coreutils binutils
+  curl wget
+  zip unzip
+  git
+  killall
+  syncthing-cli
+  sshfs
+  mtr # traceroute
+  sysstat
+  htop
+];
+#+END_SRC
+
+*** Fonts
+:PROPERTIES:
+:ID:       2ae32431-9f9a-447e-a27c-1fde8ed52a71
+:END:
+
+#+BEGIN_SRC nix
+
+fonts = {
+  enableFontDir = true;
+  enableGhostscriptFonts = true;
+  fonts = with pkgs; [
+    corefonts
+    hack-font
+  ];
+};
+#+END_SRC
+
+*** User Definition
+:PROPERTIES:
+:ID:       b525bfc9-8a31-4247-baf1-c1ff9125e97a
+:END:
+
+#+BEGIN_SRC nix
+
+security.sudo.wheelNeedsPassword = false;
+
+users.mutableUsers = false;
+
+users.extraUsers.${config.settings.username} = {
+  isNormalUser = true;
+  uid = 1000;
+  createHome = true;
+  home = "/home/${config.settings.username}";
+  description = "${config.settings.name}";
+  extraGroups = [
+    "audio"
+    "networkmanager"
+    "systemd-journal"
+    "vboxusers"
+    "video"
+    "wheel"
+  ];
+};
+
+home-manager.users.dan = import ./home.nix ;
+#+END_SRC
+
+*** SSH
+:PROPERTIES:
+:ID:       c427e0b1-ff8d-4cce-b01a-e1102b41c906
+:END:
+
+#+BEGIN_SRC nix
+
+services.openssh = {
+  enable = true;
+  forwardX11 = true;
+  permitRootLogin = "without-password";
+  passwordAuthentication = false;
+};
+
+users.users.${config.settings.username}.openssh.authorizedKeys.keys = [
+  "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+yJ5sv7iO9PBuozfmitR0JJfqDsJ7w+rlryq5CwdatO3tkRdR5dMYdFTFCeHbmeakPTC/uys08fziEUXh3DL206jDKQEMBoMGXNowZHyYzr25nIogHbveqeNTgP8jsTw5uBaJu8LFzHHey4Sw9WlRrvIqguUT5jB3omZh8yDWcxTrTJlTsN2TM3HILvirfVwBkD2uNTDdd5LplbZhx6x87VCs6ZNYhBjJ4CPcO4zTQuEdyyxUHEgtMkYgrS4Jb/Kl6Tleftlh55E74SZ3XXnw3lWdH9ra8ewH265iqNr/RwysagnalslBZDLl8yJcrMsCVi4tPrZZc4vaeCsIWK4X dan@x1carbon"
+];
+
+programs.ssh.startAgent = true;
+#+END_SRC
+
+*** X2Go Client
+:PROPERTIES:
+:ID:       193aada6-fd41-4ec5-9d51-c7964419621f
+:END:
+
+#+BEGIN_SRC nix
+
+  # programs.x2goserver.enable = true;
+#+END_SRC
+
+*** End
+:PROPERTIES:
+:ID:       3606c19d-4d09-4c08-8539-fb993b9ed3b9
+:END:
+
+#+BEGIN_SRC nix
+}
+#+END_SRC
+
+** User-level Config
+
+:PROPERTIES:
+:header-args: :tangle nixos/home.nix :comments link
+:END:
+
+#+BEGIN_SRC nix
+{ config, pkgs, ... }:
+
+let
+  homeDir = builtins.getEnv "HOME";
+  syncDir = builtins.toPath("${homeDir}/Sync");
+  sources = import ./nix/sources.nix;
+  nixos20_03 = import sources."nixpkgs-20.03" { };
+  emacs-overlay = import (import ./nix/sources.nix)."emacs-overlay";
+in {
+  imports = [
+    ./settings.nix
+  ];
+
+  home.stateVersion = "20.03";
+
+  nixpkgs.config = {
+    allowUnfree = true;
+    packageOverrides = pkgs: { stable = nixos20_03; };
+  };
+
+  nixpkgs.overlays = [ emacs-overlay ];
+
+  #+END_SRC
+
+*** Environment Variables
+
+#+BEGIN_SRC nix
+home.sessionVariables = {
+  EDITOR = "emacsclient --create-frame --alternate-editor emacs";
+  PASSWORD_STORE_DIR = "${syncDir}/.password-store";
+  GNUPGHOME = "${syncDir}/.gnupg/";
+  # GTK2_RC_FILES="${homeDir}/.gtkrc-2.0";
+  # https://github.com/xmonad/xmonad/issues/126
+  _JAVA_AWT_WM_NONREPARENTING = "1";
+};
+
+# gtk = {
+#   enable = true;
+#   iconTheme = {
+#     name = "Adwaita";
+#     package = pkgs.gnome3.adwaita-icon-theme;
+#   };
+#   theme = {
+#     name = "Adwaita-dark";
+#     package = pkgs.gnome3.gnome_themes_standard;
+#   };
+# };
+
+xdg.enable = true;
+#+END_SRC
+
+*** Packages
+#+BEGIN_SRC nix
+
+home.packages = with pkgs; [
+  rofi
+  gnupg
+
+  (pass.withExtensions (exts: [
+    exts.pass-otp
+    exts.pass-genphrase
+  ]))
+
+  xtrlock-pam  # screen locking
+  maim  # screenshots
+  rofi-pass  # interface to password manager
+  xclip  # programmatic access to clipbaord
+  arandr  # gui for xrandr (monitor layout)
+
+  # direnv
+
+  # Upstream failing :(
+  # julia_13
+
+  ## Doom dependencies
+
+  (ripgrep.override {withPCRE2 = true;})
+  gnutls              # for TLS connectivity
+
+  ## Optional dependencies
+  fd                  # faster projectile indexing
+  imagemagick         # for image-dired
+  pinentry_emacs
+
+  ## Module dependencies
+  # :tools lookup & :lang org +roam
+  sqlite
+  # :lang latex & :lang org (latex previews)
+  texlive.combined.scheme-tetex
+
+  firefox-beta-bin
+];
+#+END_SRC
+
+*** Programs
+
+#+BEGIN_SRC nix
+programs = {
+#+END_SRC
+
+**** Home Manager
+
+#+BEGIN_SRC nix
+# Let Home Manager install and manage itself.
+home-manager.enable = true;
+#+END_SRC
+
+**** Emacs
+
+#+BEGIN_SRC nix
+emacs = {
+  enable = true;
+  # Compile with imagemagick support so I can resize images.
+  package = pkgs.emacsGit.override { inherit (pkgs) imagemagick; };
+};
+#+END_SRC
+
+**** Bash
+
+#+BEGIN_SRC nix
+bash = {
+  enable = true;
+  historyFile = "${syncDir}/.config/bash/.bash_history";
+  # FIXME: Document and reduce these
+  shellOptions = [
+    "autocd" "cdspell" "dirspell" "globstar" # bash >= 4
+    "cmdhist" "nocaseglob" "histappend" "extglob"];
+  # TODO: Test this
+  # https://github.com/akermu/emacs-libvterm#directory-tracking-and-prompt-tracking
+  initExtra = [
+    ''
+    vterm_prompt_end(){
+      vterm_printf \"51;A$(whoami)@$(hostname):$(pwd)\"
+    }
+    PS1=$PS1'\\[$(vterm_prompt_end)\\]'
+    ''
+  ]
+};
+#+END_SRC
+
+**** Git
+
+#+BEGIN_SRC nix
+git = {
+  enable = true;
+  userName = "${config.settings.name}";
+  userEmail = "${config.settings.email}";
+};
+#+END_SRC
+
+**** Direnv
+
+#+BEGIN_SRC nix
+# direnv.enable = true;
+#+END_SRC
+
+**** SSH
+
+#+BEGIN_SRC nix
+  ssh = {
+    enable = true;
+
+    controlMaster  = "auto";
+    controlPath    = "/tmp/ssh-%u-%r@%h:%p";
+    controlPersist = "1800";
+
+    forwardAgent = true;
+    serverAliveInterval = 60;
+
+    hashKnownHosts = true;
+    userKnownHostsFile = "${homeDir}/.ssh/known_hosts";
+
+    matchBlocks = {
+      droplet = {
+        hostname = "45.55.5.197";
+        identityFile = "${homeDir}/.ssh/id_rsa";
+        user = "dgirsh";
+      };
+      dangirsh = {
+        host = "dangirsh.org";
+        hostname = "ssh.phx.nearlyfreespeech.net";
+        identityFile = "${homeDir}/.ssh/id_rsa";
+        user = "dangirsh_dangirsh";
+      };
+      nixos-dev = {
+        hostname = "45.79.58.229";
+        identityFile = "${homeDir}/.ssh/id_rsa";
+        user = "dan";
+      };
+    };
+  };
+#+END_SRC
+
+**** End
+#+begin_src nix
+};
+#+end_src
+
+*** Services
+:PROPERTIES:
+:ID:       9e5cb8a0-7483-4781-aafa-549b48c5316d
+:END:
+
+#+BEGIN_SRC nix
+services = {
+  emacs.enable = true;
+
+  # redshift = {
+  #   enable = true;
+  #   latitude = "33";
+  #   longitude = "-97";
+  #   temperature.day = 6500;
+  #   temperature.night = 3000;
+  # };
+
+  # https://www.reddit.com/r/emacsporn/comments/euf7m8/doomoutrunelectric_theme_xmonad_nixos/
+  # https://github.com/willbush/system/blob/371cfa9933f24bca585a3c6c952c41c864d97aa0/nixos/home.nix#L178
+  # compton = {
+  #     enable = true;
+  #     fade = true;
+  #     backend = "xrender";
+  #     fadeDelta = 1;
+  #     # I only want transparency for a couple of applications.
+  #     opacityRule = [
+  #       "90:class_g ?= 'emacs' && focused"
+  #       "75:class_g ?= 'emacs' && !focused"
+  #       "90:class_g ?= 'alacritty' && focused"
+  #       "75:class_g ?= 'alacritty' && !focused"
+  #     ];
+  #   };
+
+  # lorri.enable = true;
+};
+#+END_SRC
+
+*** End
+
+#+BEGIN_SRC nix
+}
+#+END_SRC
+
+*** TODO To test [0/5]
+
+- [ ] xtrlock-pam
+- [ ] maim
+- [ ] rofi-pass (see [[*Floating Emacs popup for quick commands][Floating Emacs popup for quick commands]])
+- [ ] xclip
+- [ ] arandr
+
+*** TODO To add [0/1]
+- keyboard config: currently requires xset & setxbmap
+- [ ] Messenging
+  - unified messenger (if it exists) for dealing with the madness of:
+    - sms
+    - signal
+    - fb
+    - whatsapp
+    - +keybase+
+    - slack
+    - irc
+    - riot
+  - To try
+    - [X] pidgin - just bad. no hidpi, things like signal don't sync with mobile state, clunky ui.
+  - Otherwise:
+    - Browser tabs for everything sans signal
+    - Signal-destop
+    - maybe slack desktop
+    - caprine for fb is nice on ubuntu
+
+
+** Global Constants
+:PROPERTIES:
+:ID:       55b66861-0727-404b-b10b-f9adb7151e5e
+:END:
+#+BEGIN_SRC nix :tangle nixos/settings.nix :comments link
+{config, pkgs, lib, ...}:
+
+with lib;
+
+{
+  options = {
+    settings = {
+      name = mkOption {
+        default = "Dan Girshovich";
+        type = with types; uniq str;
+      };
+      username = mkOption {
+        default = "dan";
+        type = with types; uniq str;
+      };
+      email = mkOption {
+        default = "dan.girsh@gmail.com";
+        type = with types; uniq str;
+      };
+    };
+  };
+}
+
+#+END_SRC
+
+** Hardware-specific Config
+:PROPERTIES:
+:ID:       0d98f7cd-b560-49b0-8ad5-bea88b3e9903
+:END:
+
+#+begin_src nix :tangle nixos/hardware-configuration.nix :comments link
+# Do not modify this file!  It was generated by ‘nixos-generate-config’
+# and may be overwritten by future invocations.  Please make changes
+# to /etc/nixos/configuration.nix instead.
+{ config, lib, pkgs, ... }:
+
+{
+  imports =
+    [ <nixpkgs/nixos/modules/profiles/qemu-guest.nix>
+    ];
+
+  boot.initrd.availableKernelModules = [ "virtio_pci" "ahci" "sd_mod" ];
+  boot.initrd.kernelModules = [ ];
+  boot.kernelModules = [ ];
+  boot.extraModulePackages = [ ];
+
+  nix.maxJobs = lib.mkDefault 1;
+#+end_src
+
+*** Disk Mounts
+:PROPERTIES:
+:ID:       25461683-44fb-4181-af1e-8c5f4d9de5e5
+:END:
+
+From [[https://nixos.org/nixos/manual/#ch-file-systems][Chapter 8. File Systems]]: "Mount points are created automatically if they don’t already exist."
+
+#+begin_src nix :tangle nixos/hardware-configuration.nix :comments link
+  fileSystems."/" =
+    { device = "/dev/disk/by-uuid/bf38bdde-34dd-4d57-9bfe-07de465f0f29";
+      fsType = "ext4";
+    };
+
+  # Linode Volume "bkp". Targetted by syncthing.
+  fileSystems."/bkp" =
+    { device = "/dev/disk/by-id/scsi-0Linode_Volume_bkp";
+      fsType = "ext4";
+    };
+
+  swapDevices =
+    [ { device = "/dev/disk/by-uuid/7596d600-d2c6-4d77-b138-7f595283af00"; }
+    ];
+}
+
+#+end_src
+** Version Pinning
+:PROPERTIES:
+:ID:       fa3d2e90-aa51-4f50-9b96-e5b9e8a453ef
+:END:
+
+These are generated via [[This was ][niv]].
+
+#+begin_src json :tangle nixos/nix/sources.json
+{
+    "emacs-overlay": {
+        "branch": "master",
+        "description": "Bleeding edge emacs overlay [maintainer=@adisbladis] ",
+        "homepage": "",
+        "owner": "nix-community",
+        "repo": "emacs-overlay",
+        "rev": "0feda8b31b52f3ea008555dfe79dba3989d3e585",
+        "sha256": "1ijr9pl0czzbgj35vj8kq4xvcana6w24ljcmzriz7cyxln4pgvln",
+        "type": "tarball",
+        "url": "https://github.com/nix-community/emacs-overlay/archive/0feda8b31b52f3ea008555dfe79dba3989d3e585.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "ghcide-nix": {
+        "branch": "master",
+        "description": "Nix installation for ghcide",
+        "homepage": "https://github.com/digital-asset/ghcide",
+        "owner": "cachix",
+        "repo": "ghcide-nix",
+        "rev": "f940ec611cc6914693874ee5e024eba921cab19e",
+        "sha256": "0vri0rivdzjvxrh6lzlwwkh8kzxsn82jp1c2w5rqzhp87y6g2k8z",
+        "type": "tarball",
+        "url": "https://github.com/cachix/ghcide-nix/archive/f940ec611cc6914693874ee5e024eba921cab19e.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs-20.03": {
+        "branch": "release-20.03",
+        "description": "A read-only mirror of NixOS/nixpkgs tracking the released channels. Send issues and PRs to",
+        "homepage": "https://github.com/NixOS/nixpkgs",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "7829e5791ba1f6e6dbddbb9b43dda72024dd2bd1",
+        "sha256": "0hs9swpz0kibjc8l3nx4m10kig1fcjiyy35qy2zgzm0a33pj114w",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs/archive/7829e5791ba1f6e6dbddbb9b43dda72024dd2bd1.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    }
+}
+#+end_src
+
+
+#+begin_src nix :tangle nixos/nix/sources.nix :comments link
+# This file has been generated by Niv.
+
+# A record, from name to path, of the third-party packages
+with rec
+{
+  pkgs =
+    if hasNixpkgsPath
+    then
+        if hasThisAsNixpkgsPath
+        then import (builtins_fetchTarball { inherit (sources_nixpkgs) url sha256; }) {}
+        else import <nixpkgs> {}
+    else
+        import (builtins_fetchTarball { inherit (sources_nixpkgs) url sha256; }) {};
+
+  sources_nixpkgs =
+    if builtins.hasAttr "nixpkgs" sources
+    then sources.nixpkgs
+    else abort
+    ''
+        Please specify either <nixpkgs> (through -I or NIX_PATH=nixpkgs=...) or
+        add a package called "nixpkgs" to your sources.json.
+    '';
+
+  # fetchTarball version that is compatible between all the versions of Nix
+  builtins_fetchTarball =
+      { url, sha256 }@attrs:
+      let
+        inherit (builtins) lessThan nixVersion fetchTarball;
+      in
+        if lessThan nixVersion "1.12" then
+          fetchTarball { inherit url; }
+        else
+          fetchTarball attrs;
+
+  # fetchurl version that is compatible between all the versions of Nix
+  builtins_fetchurl =
+      { url, sha256 }@attrs:
+      let
+        inherit (builtins) lessThan nixVersion fetchurl;
+      in
+        if lessThan nixVersion "1.12" then
+          fetchurl { inherit url; }
+        else
+          fetchurl attrs;
+
+  # A wrapper around pkgs.fetchzip that has inspectable arguments,
+  # annoyingly this means we have to specify them
+  fetchzip = { url, sha256 }@attrs: pkgs.fetchzip attrs;
+
+  # A wrapper around pkgs.fetchurl that has inspectable arguments,
+  # annoyingly this means we have to specify them
+  fetchurl = { url, sha256 }@attrs: pkgs.fetchurl attrs;
+
+  hasNixpkgsPath = (builtins.tryEval <nixpkgs>).success;
+  hasThisAsNixpkgsPath =
+    (builtins.tryEval <nixpkgs>).success && <nixpkgs> == ./.;
+
+  sources = builtins.fromJSON (builtins.readFile ./sources.json);
+
+  mapAttrs = builtins.mapAttrs or
+    (f: set: with builtins;
+      listToAttrs (map (attr: { name = attr; value = f attr set.${attr}; }) (attrNames set)));
+
+  # borrowed from nixpkgs
+  functionArgs = f: f.__functionArgs or (builtins.functionArgs f);
+  callFunctionWith = autoArgs: f: args:
+    let auto = builtins.intersectAttrs (functionArgs f) autoArgs;
+    in f (auto // args);
+
+  getFetcher = spec:
+    let fetcherName =
+      if builtins.hasAttr "type" spec
+      then builtins.getAttr "type" spec
+      else "builtin-tarball";
+    in builtins.getAttr fetcherName {
+      "tarball" = fetchzip;
+      "builtin-tarball" = builtins_fetchTarball;
+      "file" = fetchurl;
+      "builtin-url" = builtins_fetchurl;
+    };
+};
+# NOTE: spec must _not_ have an "outPath" attribute
+mapAttrs (_: spec:
+  if builtins.hasAttr "outPath" spec
+  then abort
+    "The values in sources.json should not have an 'outPath' attribute"
+  else
+    if builtins.hasAttr "url" spec && builtins.hasAttr "sha256" spec
+    then
+      spec //
+      { outPath = callFunctionWith spec (getFetcher spec) { }; }
+    else spec
+  ) sources
+#+end_src
+
+* Future Work
+
+** TODO [#A] Floating Emacs popup for quick commands
+
+It's usually most convenient to use/implement functions in Emacs than other tools. This was a huge draw towards EXWM, and I got used to that workflow.
+
+For example, generating / getting passwords stored in =pass= has a nice Emacs interface. Currently, this often means switching from Firefox to Emacs to run a command, then back to Firefox. In this situation, a common solution seems to be eschewing Emacs for things like =rofi= (e.g. =rofi-pass=).
+
+However, if I could popup a fast, floating Emacs window (similar to Rofi), I'd be able to leverage Elisp for most tasks like this. This might fully obviate =Rofi= and the XMonad prompt.
+
+The floating window would default to a =counsel-M-x= fuzzy search over all incremental commands, and be bound to =s-x= in XMonad.
+
+Examples:
+
+- screenshotting
+- pass interface
+- redshift / brightness controls
+- (maybe) finding windows / launching programs
+- clipboard management (helm kill ring)
+
+As a small added benefit, I'd have the full Emacs bindings available in the input area.
+
+** TODO [#B] HiDPI autotoggle
+
+I'm occasionally lucky enough to plug into a 4k screen, which is not yet a seamless experience in linux.
+
+For now I manually do the following on HiDPI screens:
+
+#+begin_src sh
+export GDK_SCALE=2
+#+end_src
+
+and change =layout.css.devPixelsPerPx= in Firefox about:config from -1 to 2.
+
+tweak font size in Firefox and Emacs.
+
+*** Keybase Tweak
+
+Per [[https://github.com/keybase/client/issues/5797#issuecomment-321387944][keybase/client#5797 increase font size in client]], edit the [[file:/sudo:root@localhost:/usr/lib/systemd/user/keybase.gui.service::ExecStart=/opt/keybase/Keybase --force-device-scale-factor=2][ExecStart line]] to have =--force-device-scale-factor=2=. Then, reload with:
+
+#+begin_src sh
+systemctl --user daemon-reload
+systemctl --user restart keybase.gui.service
+#+end_src
+
+#+RESULTS:
+
+
+** TODO [#B] Consistent copy/paste bindings
+
+In EXWM, I used the simulation keys to have consistent Emacs copy/paste bindings everywhere. Need a solution for XMonad. Setting the GTK bindings to "emacs" didn't seem to affect for Firefox, which is (by far) my primary non-Emacs window.
+
+** TODO [#B] Consolidate XMonad and Emacs window management
+
+Ideally, XMonad could manage all windows, including Emacs windows.
+
+Possible solutions:
+
+- frames-only-mode
+- frame-mode
+
+These seemed to cause more problems than they fixed for me.
+
+** TODO [#C] Fix indentation in tangled files
+
+Even with =org-src-preserve-indentation= set to =t=, files like [[file:nixos/home.nix][home.nix]] aren't properly indented. This is because they are split across several org blocks, and in each on I use the =nix-mode= auto-indent to fixup the indentation /within the block/. This removes the leading whitespace, so each block is tangled without leading indentation. Thankfully, Nix doesn't care, so this is purely for the aesthetics of the generated files.
+
+Quickfix is to auto-indent the tangled files, then detangle.
+
+Using noweb references seems to be the best option: https://orgmode.org/manual/Noweb-Reference-Syntax.html. See "This feature can also be used for management of indentation in exported code snippets".
+
+* Autoloads
+# Local Variables:
+# eval: (add-hook 'after-save-hook #'org-babel-tangle nil 'local)
+# End:
