@@ -4,17 +4,21 @@ At Foresight I build towards technology-enabled better futures, and connect and 
 
 Through Embassy Network and Feÿtopia, I support the growth of an intervowen network of place-based communities experimenting with new forms of governance and solidarity.
 
+#
+
 **Ecosystem steward**
 
 [Foresight Institute](https://foresight.org/) – nonprofit accelerating a large group of scientists & technologists where legacy institutions usually fail to do so, and building the path to concrete long-term desirable futures (“[existential hope](https://www.existentialhope.com/)”).
 
-Since 2017 I’ve been helping there in multiple capacities, from when it was mostly two of us and me taking on a lot of operational roles to now, where I focus on the curation of specific programs and the growth and interconnectedness of the ecosystem. 
+Since 2017 I’ve been supporting there in multiple capacities, from when it was mostly two of us to now where I focus on the curation of specific programs and the growth and interconnectedness of the ecosystem. 
 
 [Feÿtopia](https://feytopia.com/) – extitutional community of thinkers and builders hosted at Chateau du Feÿ 
 
 [Embassy Network](https://embassynetwork.com/) – communities experimenting with governance and solidarity
 
 [Kastl.cloud](https://www.kastl.cloud/) – guild of impact driven experts using creativity & technology to reshape the world
+
+##Portfolio
 
 **Selected Interviewees / guests**
 
@@ -36,6 +40,8 @@ Since 2017 I’ve been helping there in multiple capacities, from when it was mo
 
 **Co-curator & -host**
 
+/
+
 [Vision Weekend 2023](https://foresight.org/vision-weekends-2023/)
 
 [Vision Weekend 2022](https://foresight.org/member-gatherings/vision-weekends-2022/)
@@ -48,6 +54,8 @@ Since 2017 I’ve been helping there in multiple capacities, from when it was mo
 
 [Vision Weekend 2017](https://foresight.org/summary/vision-weekend-2017-foresight-institute/)
 
+/
+
 DeSci Workshop 2024 satellite to EthCC (Bruxelles)
 
 [DeSci Workshop 2023](https://foresight.org/desci-workshop-paris/) in partnership with Funding the Commons, satellite to EthCC (Paris)
@@ -55,6 +63,8 @@ DeSci Workshop 2024 satellite to EthCC (Bruxelles)
 DeSci Workshop 2022 in partnership with the CNRS, satellite to EthCC (Paris)
 
 Existential Hope Salons Series 2023, Berlin, Zuzalu, London
+
+/
 
 Existential Hope Salons Series 2021, online
 
@@ -75,17 +85,10 @@ Existential Risks on Earth 2045, Augmented Intelligence Summit, San Francisco, 2
 Commune-based Approaches to Rethinking Justice, Imagining Post Capitalism Festival, Oakland, 2018
 Communes: Engines of the Future, Emergent Communities conference, San Francisco, 2018
 
-**advocacy/ activism/ praxis**
-
+**projects & collaborations**
 w/ Swarm Foundation: Freedom of Speech Corner \| [EthCC V](https://medium.com/ethereum-swarm/monthly-ecosystem-call-28-july-2022-recap-e645c0f1d315) (2022), [EthBerlin](https://twitter.com/ethswarm/status/1570785253509464065) (2022), [Devcon VI](https://twitter.com/ethswarm/status/1580337494582734848) Bogotá (2022) 
 
 Prison abolition, harm prevention and alternative justice systems for communes and collectives
-
-[Relationship Anarchy](https://theanarchistlibrary.org/library/andie-nordgren-the-short-instructional-manifesto-for-relationship-anarchy)
-
-Animal welfare
-
-**projects & collaborations**
 
 w/ LAB GALLERY: the first purpose driven NFT gallery funding high-impact, neglected science
 
